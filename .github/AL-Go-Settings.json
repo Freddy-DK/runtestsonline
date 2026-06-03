@@ -1,5 +1,20 @@
 {
   "$schema": "https://raw.githubusercontent.com/microsoft/AL-Go-Actions/v9.0/.Modules/settings.schema.json",
   "type": "PTE",
-  "templateUrl": "https://github.com/microsoft/AL-Go-PTE@main"
+  "templateUrl": "https://github.com/microsoft/AL-Go-PTE@main",
+  "useCompilerFolder": true,
+  "doNotPublishApps": true,
+  "runs-on": "ubuntu-latest",
+  "githubRunner": "ubuntu-latest",
+  "country": "w1",
+  "artifact": "/sandbox/28.1.49838.50480/w1",
+  "doNotSignApps": true,
+  "generateDependencyArtifact": true,
+  "incrementalBuilds": {
+    "onPush": true,
+    "onPull_Request": true,
+    "onSchedule": false,
+    "mode": "modifiedApps",
+    "retentionDays": 30
+  }
 }
