@@ -31,7 +31,7 @@ if (-not $appsList -or $appsList.Count -eq 0) {
 
 try {
     $authContext = $parameters.AuthContext | ConvertFrom-Json | ConvertTo-HashTable
-    $authContext."Scopes" = 
+    $authContext."Scopes" = "https://projectmadeira.com/.default"
     $bcAuthContext = New-BcAuthContext @authContext
     if ($null -eq $bcAuthContext) {
         throw "Authentication failed"
@@ -53,7 +53,7 @@ $sandboxEnvironment = ($response.environmentType -eq 1)
 if (-not $sandboxEnvironment) {
     throw "Environment $($environmentName) is not a sandbox environment. Deployment can only be done to sandbox environments."
 }
-$scope = $parameters."scopes" = "https://projectmadeira.com/.default"
+$scope = $parameters.Scope
 if (-not $scope) {
     $scope = "DEV"
 }

@@ -6,8 +6,8 @@
   "doNotPublishApps": true,
   "runs-on": "ubuntu-latest",
   "githubRunner": "ubuntu-latest",
-  "country": "w1",
-  "artifact": "/sandbox/28.1.49838.50480/w1",
+  "country": "dk",
+  "artifact": "/sandbox/28.0.46665.51365/dk/closest",
   "doNotSignApps": true,
   "generateDependencyArtifact": true,
   "incrementalBuilds": {
@@ -23,6 +23,7 @@
     "Branches": [
       "main"
     ],
+    "Scope": "Dev",
     "DependencyInstallMode": "ForceUpgrade",
     "includeTestAppsInSandboxEnvironment": true,
     "syncMode": "ForceSync"
