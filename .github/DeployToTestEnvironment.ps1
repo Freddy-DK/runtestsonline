@@ -31,7 +31,7 @@ if (-not $appsList -or $appsList.Count -eq 0) {
 
 try {
     $authContext = $parameters.AuthContext | ConvertFrom-Json | ConvertTo-HashTable
-    $bcAuthContext = New-BcAuthContext @authContextParams
+    $bcAuthContext = New-BcAuthContext @authContext
     if ($null -eq $bcAuthContext) {
         throw "Authentication failed"
     }
