@@ -14,12 +14,14 @@ if ($scriptName -notlike "*Deploy.ps1") {
 $psmModule = $scriptName -replace "Deploy\.ps1$", "Deploy.psm1"
 import-Module $psmModule -Force -DisableNameChecking
 
-$parameters.dependencies += @{
-    "id" = $testRunnerAppId
-    "publisher" = "Microsoft"
-    "name" = "Test Runner App"
-    "version" = "1.0.0.0"
+if ($includeTestAppsInSandboxEnvironment) {
+    $parameters.dependencies += @{
+        "id" = $testRunnerAppId
+        "publisher" = "Microsoft"
+        "name" = "Test Runner App"
+        "version" = "1.0.0.0"
 }
+
 # Calculate unknown dependencies for all apps and known dependencies
 $unknownDependencies = @()
 Sort-AppFilesByDependencies -appFiles @($parameters.apps + $parameters.dependencies) -unknownDependencies ([ref]$unknownDependencies) -WarningAction SilentlyContinue | Out-Null
