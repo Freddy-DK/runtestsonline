@@ -145,7 +145,7 @@ $appsList | ForEach-Object {
             "JUnitResultFileName" = $testResultsFile
             "AppendToJUnitResultFile" = $true
             "bcAuthContext" = $bcAuthContext
-            "environment" = $environment
+            "environment" = $environmentName
             "CompilerFolder" = $compilerFolder
             "ConnectFromHost" = $true
         }
