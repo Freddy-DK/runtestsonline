@@ -2,6 +2,9 @@ Param(
     [Hashtable] $parameters
 )
 
+$publish = ($parameters.Type -eq "publish")
+$includeTestAppsInSandboxEnvironment = $parameters.IncludeTestAppsInSandboxEnvironment
+
 Write-Host "Import Deploy.psm1 from AL-Go"
 $caller = (Get-PSCallStack)[1]
 $scriptName = $caller.ScriptName   # e.g. C:\...\Actions\Deploy\Deploy.ps1
@@ -49,7 +52,6 @@ $sandboxEnvironment = ($response.environmentType -eq 1)
 if (-not $sandboxEnvironment) {
     throw "Environment $($environmentName) is not a sandbox environment. Deployment can only be done to sandbox environments."
 }
-$publish = ($parameters.Type -eq "publish")
 $scope = $parameters."Scope"
 if (-not $scope) {
     $scope = "DEV"
@@ -110,7 +112,16 @@ else {
     Publish-PerTenantExtensionApps @publishParameters
 }
 
-Write-Host "Test Runner App Ids:"
+if (-not $includeTestAppsInSandboxEnvironment) {
+    Write-Host "Not including test apps in sandbox environment, skipping test runs"
+    exit
+}
+
+if ($publish) {
+    Write-Host "Publishing done, not running tests during publish"
+    # exit
+}
+
 $testResultsFile = Join-Path $ENV:GITHUB_WORKSPACE "TestResults.xml"
 
 $artifactUrl = Get-BcArtifactUrl -type Sandbox -version $artifactVersion -country 'w1' -select Closest
@@ -127,7 +138,6 @@ $appsList | ForEach-Object {
     }
     if ($isTestApp) {
         Write-Host "Running tests for app $($_.Name) with id $appId"
-
         $Parameters = @{
             "extensionId" = $appId
             "appName" = $appJson.Name
