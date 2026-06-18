@@ -14,15 +14,6 @@ if ($scriptName -notlike "*Deploy.ps1") {
 $psmModule = $scriptName -replace "Deploy\.ps1$", "Deploy.psm1"
 import-Module $psmModule -Force -DisableNameChecking
 
-if ($includeTestAppsInSandboxEnvironment) {
-    $parameters.dependencies += @{
-        "id" = $testRunnerAppId
-        "publisher" = "Microsoft"
-        "name" = "Test Runner App"
-        "version" = "1.0.0.0"
-    }
-}
-
 # Calculate unknown dependencies for all apps and known dependencies
 $unknownDependencies = @()
 Sort-AppFilesByDependencies -appFiles @($parameters.apps + $parameters.dependencies) -unknownDependencies ([ref]$unknownDependencies) -WarningAction SilentlyContinue | Out-Null
@@ -132,6 +123,9 @@ if ($publish) {
     Write-Host "Publishing done, not running tests during publish"
     # exit
 }
+
+# Ensure that test runner is installed
+Import-TestToolkitToBcContainer -bcAuthContext $bcAuthContext -environment $environmentName -includeTestRunnerOnly
 
 $testResultsFile = Join-Path $ENV:GITHUB_WORKSPACE "TestResults.xml"
 
