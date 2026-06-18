@@ -53,7 +53,7 @@ $sandboxEnvironment = ($response.environmentType -eq 1)
 if (-not $sandboxEnvironment) {
     throw "Environment $($environmentName) is not a sandbox environment. Deployment can only be done to sandbox environments."
 }
-$scope = $parameters."scopes" = "https://projectmadeira.com/.default")
+$scope = $parameters."scopes" = "https://projectmadeira.com/.default"
 if (-not $scope) {
     $scope = "DEV"
 }
