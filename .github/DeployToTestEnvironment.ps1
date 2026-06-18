@@ -110,7 +110,21 @@ else {
     Publish-PerTenantExtensionApps @publishParameters
 }
 
-Write-Host "Deploying Apps:"
+Write-Host "Test Runner App Ids:"
+$testRunnerApps | Out-Host
+
+Write-Host "Running tests"
 $appsList | ForEach-Object { 
-    Write-Host "- $($_.FullName)"
+    $appJson = Get-AppJsonFromAppFile -appFile $_.FullName
+    $appJson | ConvertTo-Json -Depth 10 | Out-Host
+    $appId = $appJson.id
+    $isTestApp = $false
+    $appJson.Dependencies | ForEach-Object {
+        if ($testRunnerApps -contains $_.id) {
+            $isTestApp = $true
+        }
+    }
+    if ($isTestApp) {
+        Write-Host "Running tests for app $($_.Name) with id $appId"
+    }
 }
