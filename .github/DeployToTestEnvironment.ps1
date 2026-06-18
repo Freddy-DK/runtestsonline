@@ -20,6 +20,7 @@ if ($includeTestAppsInSandboxEnvironment) {
         "publisher" = "Microsoft"
         "name" = "Test Runner App"
         "version" = "1.0.0.0"
+    }
 }
 
 # Calculate unknown dependencies for all apps and known dependencies
