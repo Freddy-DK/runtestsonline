@@ -124,13 +124,14 @@ if ($publish) {
     # exit
 }
 
-# Ensure that test runner is installed
-Import-TestToolkitToBcContainer -bcAuthContext $bcAuthContext -environment $environmentName -includeTestRunnerOnly
-
 $testResultsFile = Join-Path $ENV:GITHUB_WORKSPACE "TestResults.xml"
 
 $artifactUrl = Get-BcArtifactUrl -type Sandbox -version $artifactVersion -country 'w1' -select Closest
 $compilerFolder = New-BcCompilerFolder -artifactUrl $artifactUrl
+
+# Ensure that test runner is installed
+Import-TestToolkitToBcContainer -bcAuthContext $bcAuthContext -environment $environmentName -compilerFolder $compilerfolder -includeTestRunnerOnly
+
 Write-Host "Running tests"
 $appsList | ForEach-Object { 
     $appJson = Get-AppJsonFromAppFile -appFile $_.FullName
