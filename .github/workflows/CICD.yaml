@@ -1,13 +1,12 @@
 name: ' CI/CD'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 on:
   workflow_dispatch:
-  push:
-    paths-ignore:
-      - '**.md'
-      - '.github/workflows/*.yaml'
-      - '!.github/workflows/CICD.yaml'
-    branches: [ 'main', 'release/*', 'feature/*' ]
+  schedule:
+    - cron: '0 0 * * 0'
 
 defaults:
   run:

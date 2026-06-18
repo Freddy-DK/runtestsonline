@@ -20,7 +20,9 @@
   "DeployToCCMS": {
     "EnvironmentType": "TestEnvironment",
     "EnvironmentName": "ccms",
-    "Branches": [ "main" ],
+    "Branches": [
+      "main"
+    ],
     "DependencyInstallMode": "ForceUpgrade",
     "includeTestAppsInSandboxEnvironment": true,
     "syncMode": "ForceSync"
