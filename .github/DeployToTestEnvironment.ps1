@@ -2,21 +2,14 @@ Param(
     [Hashtable] $parameters
 )
 
+Write-Host "Import Deploy.psm1 from AL-Go"
 $caller = (Get-PSCallStack)[1]
 $scriptName = $caller.ScriptName   # e.g. C:\...\Actions\Deploy\Deploy.ps1
 if ($scriptName -notlike "*Deploy.ps1") {
-    throw "This script is meant to be called from Deploy.ps1. Calling it directly is not supported."
+    throw "This script is meant to be called from AL-Go's Deploy.ps1. Calling it directly is not supported."
 }
 $psmModule = $scriptName -replace "Deploy\.ps1$", "Deploy.psm1"
 import-Module $psmModule -Force -DisableNameChecking
-
-$parameters | ConvertTo-Json -Depth 99 | Out-Host
-Get-ChildItem -Path "ENV:" | ForEach-Object { Write-Host "$($_.Name)=$($_.Value)" }
-
-Write-Host "Deployment Type (CD or Release): $($parameters.type)"
-Write-Host "Apps to deploy: $($parameters.apps)"
-Write-Host "Environment Type: $($parameters.EnvironmentType)"
-Write-Host "Environment Name: $($parameters.EnvironmentName)"
 
 # Calculate unknown dependencies for all apps and known dependencies
 $unknownDependencies = @()
@@ -118,7 +111,6 @@ else {
 }
 
 Write-Host "Test Runner App Ids:"
-$testRunnerApps | Out-Host
 $testResultsFile = Join-Path $ENV:GITHUB_WORKSPACE "TestResults.xml"
 
 $artifactUrl = Get-BcArtifactUrl -type Sandbox -version $artifactVersion -country 'w1' -select Closest
