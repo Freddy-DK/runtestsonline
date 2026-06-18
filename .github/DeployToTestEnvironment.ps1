@@ -18,6 +18,10 @@ Write-Host "Apps to deploy: $($parameters.apps)"
 Write-Host "Environment Type: $($parameters.EnvironmentType)"
 Write-Host "Environment Name: $($parameters.EnvironmentName)"
 
+# Calculate unknown dependencies for all apps and known dependencies
+$unknownDependencies = @()
+Sort-AppFilesByDependencies -appFiles @($parameters.apps + $parameters.dependencies) -unknownDependencies ([ref]$unknownDependencies) -WarningAction SilentlyContinue | Out-Null
+
 $environmentName = $parameters.EnvironmentName
 
 $tempPath = Join-Path ([System.IO.Path]::GetTempPath()) ([GUID]::NewGuid().ToString())
@@ -57,9 +61,53 @@ $scope = $parameters."Scope"
 if (-not $scope) {
     $scope = "DEV"
 }
- Get-BcEnvironmentInstalledExtensions -environment $environmentName -bcAuthContext $bcAuthContext | ForEach-Object {
-    Write-Host "Installed app:"
-    $_ | ConvertTo-Json -Depth 99 | Write-Host
+Write-Host "Installed apps:"
+Get-BcEnvironmentInstalledExtensions -environment $environmentName -bcAuthContext $bcAuthContext | ForEach-Object {
+    $version = $_.VersionMajor, $_.VersionMinor, $_.VersionBuild, $_.VersionRevision -join "."
+    Write-Host "- $($_.publisher).$($_.displayName) v$version (IsInstalled: $($_.isInstalled), PublishedAs: $($_.publishedAs), ID: $($_.id))"
+}
+
+if ($dependencies) {
+    InstallOrUpgradeApps -bcAuthContext $bcAuthContext -environment $environmentName -Apps $parameters.dependencies -installMode $parameters.DependencyInstallMode
+}
+if ($unknownDependencies) {
+    InstallUnknownDependencies -bcAuthContext $bcAuthContext -environment $environmentName -Apps $unknownDependencies -installMode $parameters.DependencyInstallMode
+}
+if ($scope -eq 'Dev') {
+    $publishParameters = @{
+        "bcAuthContext" = $bcAuthContext
+        "environment" = $environmentName
+        "appFile" = $appsList
+    }
+    if ($parameters.SyncMode) {
+        if (@('Add','ForceSync', 'Clean', 'Development') -notcontains $parameters.SyncMode) {
+            throw "Invalid SyncMode $($parameters.SyncMode) when deploying using the development endpoint. Valid values are Add, ForceSync, Development and Clean."
+        }
+        Write-Host "Using $($parameters.SyncMode)"
+        $publishParameters += @{ "SyncMode" = $parameters.SyncMode }
+    }
+    Write-Host "Publishing apps using development endpoint"
+    Publish-BcContainerApp @publishParameters -useDevEndpoint -checkAlreadyInstalled -excludeRuntimePackages -replacePackageId
+}
+else {
+    # Use automation API for production environments (Publish-PerTenantExtensionApps)
+    $publishParameters = @{
+        "bcAuthContext" = $bcAuthContext
+        "environment" = $environmentName
+        "appFiles" = $appsList
+    }
+    if ($parameters.SyncMode) {
+        if (@('Add','ForceSync') -notcontains $parameters.SyncMode) {
+            throw "Invalid SyncMode $($parameters.SyncMode) when deploying using the automation API. Valid values are Add and ForceSync."
+        }
+        Write-Host "Using $($parameters.SyncMode)"
+        $syncMode = $parameters.SyncMode
+        if ($syncMode -eq 'ForceSync') { $syncMode = 'Force' }
+        $publishParameters += @{ "SchemaSyncMode" = $syncMode }
+    }
+    CheckInstalledApps -bcAuthContext $bcAuthContext -environment $environmentName -appFiles $appsList
+    Write-Host "Publishing apps using automation API"
+    Publish-PerTenantExtensionApps @publishParameters
 }
 
 Write-Host "Deploying Apps:"
