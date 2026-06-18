@@ -2,7 +2,7 @@ Param(
     [Hashtable] $parameters
 )
 
-$parameters | ForEach-Object { Write-Host "$($_.Key)=$($_.Value)" }
+$parameters | ConvertTo-Json -Depth 99 | Out-Host
 
 Get-ChildItem -Path "ENV:" | ForEach-Object { Write-Host "$($_.Name)=$($_.Value)" }
 
