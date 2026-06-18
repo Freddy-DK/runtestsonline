@@ -61,10 +61,17 @@ $scope = $parameters."Scope"
 if (-not $scope) {
     $scope = "DEV"
 }
-Write-Host "Installed apps:"
+$artifactVersion = $null
+Write-Host "Determine artifacts:"
 Get-BcEnvironmentInstalledExtensions -environment $environmentName -bcAuthContext $bcAuthContext | ForEach-Object {
-    $version = $_.VersionMajor, $_.VersionMinor, $_.VersionBuild, $_.VersionRevision -join "."
-    Write-Host "- $($_.publisher).$($_.displayName) v$version (IsInstalled: $($_.isInstalled), PublishedAs: $($_.publishedAs), ID: $($_.id))"
+    $version = [System.Version]::new($_.VersionMajor, $_.VersionMinor, $_.VersionBuild, $_.VersionRevision)
+    if ($_.publisher -eq "Microsoft" -and $_.displayName -eq "Base Application") {
+        Write-Host "Base Application version in environment is $version"
+        $artifactVersion = $version
+    }
+}
+if (-not $artifactVersion) {
+    throw "Could not determine Base Application version in environment. Make sure the environment is properly set up and has the Base Application installed."
 }
 
 if ($dependencies) {
@@ -112,11 +119,13 @@ else {
 
 Write-Host "Test Runner App Ids:"
 $testRunnerApps | Out-Host
+$testResultsFile = Join-Path $ENV:GITHUB_WORKSPACE "TestResults.xml"
 
+$artifactUrl = Get-BcArtifactUrl -type Sandbox -version $artifactVersion -country 'w1' -select Closest
+$compilerFolder = New-BcCompilerFolder -artifactUrl $artifactUrl
 Write-Host "Running tests"
 $appsList | ForEach-Object { 
     $appJson = Get-AppJsonFromAppFile -appFile $_.FullName
-    $appJson | ConvertTo-Json -Depth 10 | Out-Host
     $appId = $appJson.id
     $isTestApp = $false
     $appJson.Dependencies | ForEach-Object {
@@ -126,5 +135,20 @@ $appsList | ForEach-Object {
     }
     if ($isTestApp) {
         Write-Host "Running tests for app $($_.Name) with id $appId"
+
+        $Parameters = @{
+            "extensionId" = $appId
+            "appName" = $appJson.Name
+            "GitHubActions" = "error"
+            "detailed" = $true
+            "returnTrueIfAllPassed" = $true
+            "JUnitResultFileName" = $testResultsFile
+            "AppendToJUnitResultFile" = $true
+            "bcAuthContext" = $bcAuthContext
+            "environment" = $environment
+            "CompilerFolder" = $compilerFolder
+            "ConnectFromHost" = $true
+        }
+        Run-TestsInBcContainer @Parameters
     }
 }
