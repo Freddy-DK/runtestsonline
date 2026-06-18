@@ -58,7 +58,8 @@ if (-not $scope) {
     $scope = "DEV"
 }
  Get-BcEnvironmentInstalledExtensions -environment $environmentName -bcAuthContext $bcAuthContext | ForEach-Object {
-    Write-Host "Installed app: $($_.Name) - version: $($_.Version) - publisher: $($_.Publisher)"
+    Write-Host "Installed app:"
+    $_ | ConvertTo-Json -Depth 99 | Write-Host
 }
 
 Write-Host "Deploying Apps:"
