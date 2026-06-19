@@ -11,7 +11,8 @@ $scriptName = $caller.ScriptName   # e.g. C:\...\Actions\Deploy\Deploy.ps1
 if ($scriptName -notlike "*Deploy.ps1") {
     throw "This script is meant to be called from AL-Go's Deploy.ps1. Calling it directly is not supported."
 }
-$psmModule = $scriptName -replace "Deploy\.ps1$", "Deploy.psm1"
+$scriptPath = Split-Path -Path $scriptName
+$psmModule = Join-Path -Path $scriptPath -ChildPath "Deploy.psm1"
 import-Module $psmModule -Force -DisableNameChecking
 
 # Calculate unknown dependencies for all apps and known dependencies
@@ -133,6 +134,7 @@ $compilerFolder = New-BcCompilerFolder -artifactUrl $artifactUrl
 Import-TestToolkitToBcContainer -bcAuthContext $bcAuthContext -environment $environmentName -compilerFolder $compilerfolder -includeTestRunnerOnly
 
 Write-Host "Running tests"
+$allPassed = true
 $appsList | ForEach-Object { 
     $appJson = Get-AppJsonFromAppFile -appFile $_.FullName
     $appId = $appJson.id
@@ -157,6 +159,15 @@ $appsList | ForEach-Object {
             "CompilerFolder" = $compilerFolder
             "ConnectFromHost" = $true
         }
-        Run-TestsInBcContainer @Parameters
+        if (!(Run-TestsInBcContainer @Parameters)) {
+            $allPassed = $false
+        }
     }
+}
+
+$testAnalyzerPath = Join-Path $scriptPath "../AnalyzeTests/AnalyzeTests.ps1"
+. $testAnalyzerPath -project '.' -testType 'normal'
+
+if (-not $allPassed) {
+    throw "Some tests have failed. Please check the test results for details."
 }
