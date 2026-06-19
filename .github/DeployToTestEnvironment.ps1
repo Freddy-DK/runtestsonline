@@ -134,7 +134,7 @@ $compilerFolder = New-BcCompilerFolder -artifactUrl $artifactUrl
 Import-TestToolkitToBcContainer -bcAuthContext $bcAuthContext -environment $environmentName -compilerFolder $compilerfolder -includeTestRunnerOnly
 
 Write-Host "Running tests"
-$allPassed = true
+$allPassed = $true
 $appsList | ForEach-Object { 
     $appJson = Get-AppJsonFromAppFile -appFile $_.FullName
     $appId = $appJson.id
